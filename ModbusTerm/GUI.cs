@@ -171,6 +171,7 @@ namespace ModbusTerm
             Thread.Sleep(100);
 
             logsBox.AppendText("[\n");
+            logsBox.AppendText("  [Serial Mode] Command: Send full frame\n");
             logsBox.AppendText("  [Serial Mode] Request: " + textBox2.Text + "\n");
 
             String output = String.Empty;
@@ -190,27 +191,25 @@ namespace ModbusTerm
                 // Parsing
                 textBox1.Text = output.Split(' ')[0];
                 textBox11.Text = output.Split(' ')[1];
+                textBox13.Text = output.Split(' ')[output.Split(' ').Length - 3] + " " + output.Split(' ')[output.Split(' ').Length - 2];
 
                 if (textBox11.Text == "10")
                 {
                     textBox9.Text = output.Split(' ')[2] + " " + output.Split(' ')[3];
                     textBox10.Text = Convert.ToInt32(output.Split(' ')[4] + "" + output.Split(' ')[5], 16).ToString();
                     textBox12.Text = "n/a";
-                    textBox13.Text = output.Split(' ')[6] + " " + output.Split(' ')[7];
                 }
-                else if (textBox11.Text == "3")
+                else if (textBox11.Text == "03")
                 {
                     textBox9.Text = "n/a";
                     textBox10.Text = "n/a";
                     textBox12.Text = Convert.ToUInt16(output.Split(' ')[2], 16).ToString();
-                    textBox13.Text = output.Split(' ')[output.Split(' ').Length - 2] + " " + output.Split(' ').Last();
                 }
                 else
                 {
                     textBox9.Text = "n/a";
                     textBox10.Text = "n/a";
                     textBox12.Text = "n/a";
-                    textBox13.Text = "n/a";
                 }
             }
 
@@ -229,51 +228,22 @@ namespace ModbusTerm
 
             for (int i = 0; i < regs.Length; i++)
             {
-                uregs[i] = Convert.ToUInt16(regs[i]);
+                if ((Convert.ToUInt32(regs[i]) <= 65535))
+                    uregs[i] = Convert.ToUInt16(regs[i]);
             }
 
             //master.WriteMultipleRegisters((byte)int.Parse(textBox3.Text), (ushort)int.Parse(textBox4.Text), uregs);
             ModbusRtuMaster.WriteRegisters(mport, (byte)int.Parse(textBox3.Text), (ushort)int.Parse(textBox4.Text), uregs);
 
-            logsBox.AppendText("[\n");
-            logsBox.AppendText("  [Serial Mode] Request: " + BitConverter.ToString(Modbus.Data.DataStore.LastRequest).Replace('-', ' ') + "\n");
-            logsBox.AppendText("  [Serial Mode] Response: " + BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Replace('-', ' ') + "\n");
-            logsBox.AppendText("]\n");
-
-            // Parsing
-            textBox1.Text = BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[0];
-            textBox11.Text = BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[1];
-            textBox9.Text = BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[2] + " " + BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[3];
-            textBox10.Text = Convert.ToInt32(BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[4] + "" + BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[5], 16).ToString();
-            textBox12.Text = "n/a";
-            textBox13.Text = BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[6] + " " + BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[7];
-
+            this.WriteOutput("[Serial Mode]", Modbus.Data.DataStore.LastResponse, Modbus.Data.DataStore.LastRequest);
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
             // Read Button
             var registers = ModbusRtuMaster.ReadRegisters(mport, (byte)int.Parse(textBox8.Text), (ushort)int.Parse(textBox7.Text), (ushort)int.Parse(textBox6.Text));
-            
-            string regs = "";
 
-            for (int i = 0; i < registers.Length; i++)
-                regs += "[" + i + "] => " + registers[i] + "; ";
-
-
-            logsBox.AppendText("[\n");
-            logsBox.AppendText("  [Serial Mode] Request: " + BitConverter.ToString(Modbus.Data.DataStore.LastRequest).Replace('-', ' ') + "\n");
-            logsBox.AppendText("  [Serial Mode] Response: " + BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Replace('-', ' ') + "\n");
-            logsBox.AppendText("  [Serial Mode] Registers (dec): " + regs + "\n");
-            logsBox.AppendText("]\n");
-
-            // Parsing
-            textBox1.Text = BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[0];
-            textBox11.Text = BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[1];
-            textBox9.Text = "n/a";
-            textBox10.Text = "n/a";
-            textBox12.Text = Convert.ToUInt16(BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[2], 16).ToString();
-            textBox13.Text = BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-')[BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-').Length - 2] + " " + BitConverter.ToString(Modbus.Data.DataStore.LastResponse).Split('-').Last();
+            this.ReadOutput("[Serial Mode]", Modbus.Data.DataStore.LastResponse, Modbus.Data.DataStore.LastRequest, registers);
 
         }
 
@@ -288,6 +258,55 @@ namespace ModbusTerm
         }
 
         #endregion
+
+
+        private void WriteOutput(string mode_name, byte[] response, byte[] request)
+        {
+            logsBox.AppendText("[\n");
+            logsBox.AppendText("  " + mode_name + " Command: Write\n");
+            logsBox.AppendText("  " + mode_name + " Request: " + BitConverter.ToString(request).Replace('-', ' ') + "\n");
+            logsBox.AppendText("  " + mode_name + " Response: " + BitConverter.ToString(response).Replace('-', ' ') + "\n");
+            logsBox.AppendText("]\n");
+
+            // Parsing
+            textBox1.Text = BitConverter.ToString(response).Split('-')[0];
+            textBox11.Text = BitConverter.ToString(response).Split('-')[1];
+            textBox9.Text = BitConverter.ToString(response).Split('-')[2] + " " + BitConverter.ToString(response).Split('-')[3];
+            textBox10.Text = Convert.ToInt32(BitConverter.ToString(response).Split('-')[4] + "" + BitConverter.ToString(response).Split('-')[5], 16).ToString();
+            textBox12.Text = "n/a";
+            textBox13.Text = BitConverter.ToString(response).Split('-')[6] + " " + BitConverter.ToString(response).Split('-')[7];
+
+        }
+
+        private void ReadOutput(string mode_name, byte[] response, byte[] request, ushort[] registers)
+        {
+            string regs = "";
+
+            for (int i = 0; i < registers.Length; i++)
+                regs += "[" + i + "] => " + registers[i] + "; ";
+
+
+            logsBox.AppendText("[\n");
+            logsBox.AppendText("  " + mode_name + " Command: Read\n");
+            logsBox.AppendText("  " + mode_name + " Request: " + BitConverter.ToString(request).Replace('-', ' ') + "\n");
+            logsBox.AppendText("  " + mode_name + " Response: " + BitConverter.ToString(response).Replace('-', ' ') + "\n");
+            logsBox.AppendText("  " + mode_name + " Registers (dec): " + regs + "\n");
+            logsBox.AppendText("]\n");
+
+            // Parsing
+            textBox1.Text = BitConverter.ToString(response).Split('-')[0];
+            textBox11.Text = BitConverter.ToString(response).Split('-')[1];
+            textBox9.Text = "n/a";
+            textBox10.Text = "n/a";
+            textBox12.Text = Convert.ToUInt16(BitConverter.ToString(response).Split('-')[2], 16).ToString();
+            textBox13.Text = BitConverter.ToString(response).Split('-')[BitConverter.ToString(response).Split('-').Length - 2] + " " + BitConverter.ToString(response).Split('-').Last();
+        }
+
+        private void onlyNum(object sender, KeyPressEventArgs e)
+        {
+            if ((e.KeyChar <= 48 || e.KeyChar >= 59) && e.KeyChar != 8)
+                e.Handled = true;
+        }
 
     }
 }
