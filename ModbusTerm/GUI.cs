@@ -17,6 +17,7 @@ using InTheHand.Net.Bluetooth;
 using System.IO;
 using Modbus.IO;
 using System.Net.Sockets;
+using System.Net;
 
 namespace ModbusTerm
 {
@@ -25,6 +26,7 @@ namespace ModbusTerm
 
         private IModbusSerialMaster master;
         private SerialPort mport;
+        private TcpClient tcp;
 
         public GUI()
         {
@@ -43,6 +45,10 @@ namespace ModbusTerm
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (tabControl1.SelectedIndex == 2)
+            {
+                networkPrepare();
+            }
             //tabControl1.SelectedIndex = 0;
         }
 
@@ -289,8 +295,78 @@ namespace ModbusTerm
 
         #endregion
 
-        #region Wi-fi Code
-        // Some comment
+        #region Network Code
+        private void networkPrepare()
+        {
+            IPHostEntry ipEntry = Dns.GetHostEntry(Dns.GetHostName()); // Получение ip-адресов
+            IPAddress[] addr = ipEntry.AddressList;
+            foreach (IPAddress a in addr)
+            { // Добавление всех доступных адресов в список
+                if(a.ToString().Length <= 15)
+                comboBox7.Items.Add(a.ToString());
+            }
+            comboBox7.SelectedIndex = 0;
+            textBox21.Text = "502"; // Порт по умолчанию
+
+            groupBox8.Enabled = false;
+        }
+
+        private void button13_Click(object sender, EventArgs e)
+        { // Открытие порта
+            button13.Enabled = false;
+            button12.Enabled = true;
+            groupBox8.Enabled = true;
+
+            tcp = new TcpClient(comboBox7.SelectedItem.ToString(), int.Parse(textBox21.Text));
+            ModbusTcpMaster.connect(tcp);
+            //tcp = new ModbusTCP.Master(comboBox7.SelectedItem.ToString(), ushort.Parse(textBox21.Text));
+            if (tcp.Connected)
+                MessageBox.Show("Connected");
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        { // Закрытие порта
+            button13.Enabled = true;
+            button12.Enabled = false;
+            groupBox8.Enabled = false;
+            /*
+            if (tcp != null)
+            {
+                tcp.disconnect();
+            }*/
+        }
+
+        private void button14_Click(object sender, EventArgs e)
+        { // Read button
+            // 24 23 22
+            ushort[] values = ModbusTcpMaster.ReadRegisters(byte.Parse(textBox24.Text), ushort.Parse(textBox23.Text), ushort.Parse(textBox22.Text));
+            Console.WriteLine("Length " + values.Length.ToString());
+            Console.WriteLine(values[0]);
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            // Write button
+            // 27 26 25
+            string[] regs = textBox25.Text.Split(' ');
+
+            ushort[] uregs = new ushort[regs.Length];
+
+            for (int i = 0; i < regs.Length; i++)
+            {
+                uregs[i] = Convert.ToUInt16(regs[i]);
+            }
+            ModbusTcpMaster.WriteRegisters(byte.Parse(textBox27.Text), ushort.Parse(textBox26.Text), uregs);
+        }
+
         #endregion
+
+        
+
+        
+
+        
+
+        
     }
 }
