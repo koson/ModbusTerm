@@ -97,13 +97,9 @@
             this.button11 = new System.Windows.Forms.Button();
             this.button14 = new System.Windows.Forms.Button();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
-<<<<<<< HEAD
             this.comboBox7 = new System.Windows.Forms.ComboBox();
             this.textBox21 = new System.Windows.Forms.TextBox();
-=======
             this.textBox21 = new System.Windows.Forms.TextBox();
-            this.textBox20 = new System.Windows.Forms.TextBox();
->>>>>>> origin/master
             this.label26 = new System.Windows.Forms.Label();
             this.button12 = new System.Windows.Forms.Button();
             this.label27 = new System.Windows.Forms.Label();
@@ -1007,7 +1003,6 @@
             // groupBox7
             // 
             this.groupBox7.Controls.Add(this.textBox21);
-            this.groupBox7.Controls.Add(this.textBox20);
             this.groupBox7.Controls.Add(this.label26);
             this.groupBox7.Controls.Add(this.button12);
             this.groupBox7.Controls.Add(this.label27);
@@ -1025,13 +1020,6 @@
             this.textBox21.Name = "textBox21";
             this.textBox21.Size = new System.Drawing.Size(100, 20);
             this.textBox21.TabIndex = 8;
-            // 
-            // textBox20
-            // 
-            this.textBox20.Location = new System.Drawing.Point(51, 28);
-            this.textBox20.Name = "textBox20";
-            this.textBox20.Size = new System.Drawing.Size(100, 20);
-            this.textBox20.TabIndex = 7;
             // 
             // label26
             // 
