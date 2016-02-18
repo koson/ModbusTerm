@@ -54,9 +54,9 @@ namespace ModbusTerm
 
             foreach (string portname in portnames)
             {
-                if (portname.Length == 4)
+                if (portname.Length == 5)
                     comboBox1.Items.Add(portname.Substring(0, 4));
-                else if (portname.Length >= 5)
+                else if (portname.Length > 5)
                     comboBox1.Items.Add(portname.Substring(0, 5));
                 else
                     comboBox1.Items.Add(portname);
@@ -289,5 +289,8 @@ namespace ModbusTerm
 
         #endregion
 
+        #region Wi-fi Code
+        // Some comment
+        #endregion
     }
 }
