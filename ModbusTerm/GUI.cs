@@ -18,6 +18,7 @@ using System.IO;
 using Modbus.IO;
 using System.Net.Sockets;
 using System.Net;
+using System.Net.NetworkInformation;
 
 namespace ModbusTerm
 {
@@ -273,17 +274,45 @@ namespace ModbusTerm
         #region Network Code
         private void networkPrepare()
         {
+            textBox21.Text = "502"; // Порт по умолчанию
+            groupBox8.Enabled = false;
+
             IPHostEntry ipEntry = Dns.GetHostEntry(Dns.GetHostName()); // Получение ip-адресов
             IPAddress[] addr = ipEntry.AddressList;
+            IPAddress localIp = null;
             foreach (IPAddress a in addr)
-            { // Добавление всех доступных адресов в список
+            { // Получение собственного ip
                 if (a.ToString().Length <= 15)
-                    comboBox7.Items.Add(a.ToString());
+                    localIp = a;
             }
-            comboBox7.SelectedIndex = 0;
-            textBox21.Text = "502"; // Порт по умолчанию
+            string[] ipParts = localIp.ToString().Split('.');
+            string ipPattern = ipParts[0] + "." + ipParts[1] + "." + ipParts[2] + ".";
 
-            groupBox8.Enabled = false;
+            AutoResetEvent waiter = new AutoResetEvent(false); //создаем класс управления событиями в потоке
+            byte[] buffer = Encoding.ASCII.GetBytes("test ping"); //записываем в массив байт сконвертированную в байтовый массив строку для отправки в пинг запросе
+            
+            for (int i = 1; i < 255; i++)
+            {
+                Ping p = new Ping();
+                p.PingCompleted += new PingCompletedEventHandler(p_PingCompleted); //указываем на метод, который будет выполняться в результате получения ответа на асинхронный запрос пинга
+                PingOptions options = new PingOptions(64, true); //выставляем опции для пинга (непринципиально)
+                IPAddress ip = IPAddress.Parse(ipPattern + i); // формируем ip-адрес
+                p.SendAsync(ip, 500, buffer, options, waiter); //посылаем асинхронный пинг на адрес с таймаутом 500мс, в нем передаем массив байт сконвертированных их строки в начале кода, используем при передаче указанные опции, после обращаемся к классу управления событиями
+            }
+            comboBox7.Sorted = true; // Сортировка по возрастанию
+        }
+        
+        private void p_PingCompleted(object sender, PingCompletedEventArgs e)
+        {
+            if (e.Reply.Status == IPStatus.Success)
+            {
+                //Добавляем адрес, с которого пришел ответ в comboBox
+                comboBox7.Items.Add(e.Reply.Address.ToString());
+                comboBox7.SelectedIndex = 0;
+                //Console.WriteLine(e.Reply.Address.ToString());
+            }
+            // Let the main thread resume.
+            ((AutoResetEvent)e.UserState).Set();
         }
 
         private void button13_Click(object sender, EventArgs e)
