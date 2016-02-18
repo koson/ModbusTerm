@@ -4,4 +4,3 @@ Created using NModbus (sjalex, thanks for library).
 
 - Language: C#
 - IDE: Visual Studio 2010
-fuch this shit
