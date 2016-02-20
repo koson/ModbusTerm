@@ -59,6 +59,8 @@ namespace Modbus.IO
 			byte[] frame = mbapHeader.Concat(messageFrame).ToArray();
 			_logger.InfoFormat("RX: {0}", frame.Join(", "));
 
+            Data.DataStore.LastResponse = frame;
+
 			return frame;
 		}
 

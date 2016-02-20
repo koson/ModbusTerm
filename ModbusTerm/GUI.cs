@@ -608,7 +608,27 @@ namespace ModbusTerm
             // 24 23 22
             ushort[] registers = ModbusTcpMaster.ReadRegisters(byte.Parse(textBox24.Text), ushort.Parse(textBox23.Text), ushort.Parse(textBox22.Text));
             
-            this.ReadOutput("[Network Mode]", Modbus.Data.DataStore.LastResponse, Modbus.Data.DataStore.LastRequest, registers);
+            byte[] response = new byte[Modbus.Data.DataStore.LastResponse.Length - 6];
+            byte[] request = new byte[Modbus.Data.DataStore.LastRequest.Length - 6];
+            
+            Array.Copy(Modbus.Data.DataStore.LastResponse, 6, response, 0, Modbus.Data.DataStore.LastResponse.Length - 6);
+            Array.Copy(Modbus.Data.DataStore.LastRequest, 6, request, 0, Modbus.Data.DataStore.LastRequest.Length - 6);
+            
+            byte[] responseCrc = Modbus.Utility.ModbusUtility.CalculateCrc(response);
+            byte[] requestCrc = Modbus.Utility.ModbusUtility.CalculateCrc(request);
+
+            byte[] responseWithCrc = new byte[Modbus.Data.DataStore.LastResponse.Length - 4];
+            byte[] requestWithCrc = new byte[Modbus.Data.DataStore.LastRequest.Length - 4];
+
+            Array.Copy(Modbus.Data.DataStore.LastResponse, 6, responseWithCrc, 0, Modbus.Data.DataStore.LastResponse.Length - 6);
+            Array.Copy(Modbus.Data.DataStore.LastRequest, 6, requestWithCrc, 0, Modbus.Data.DataStore.LastRequest.Length - 6);
+
+            responseWithCrc[responseWithCrc.Length - 2] = responseCrc[0];
+            responseWithCrc[responseWithCrc.Length - 1] = responseCrc[1];
+            requestWithCrc[requestWithCrc.Length - 2] = requestCrc[0];
+            requestWithCrc[requestWithCrc.Length - 1] = requestCrc[1];
+
+            this.ReadOutput("[Network Mode]", responseWithCrc, requestWithCrc, registers);
         }
 
         private void button11_Click(object sender, EventArgs e)
@@ -625,7 +645,44 @@ namespace ModbusTerm
             }
             ModbusTcpMaster.WriteRegisters(byte.Parse(textBox27.Text), ushort.Parse(textBox26.Text), uregs);
 
-            this.WriteOutput("[Network Mode]", Modbus.Data.DataStore.LastResponse, Modbus.Data.DataStore.LastRequest);
+            byte[] response = new byte[Modbus.Data.DataStore.LastResponse.Length - 4];
+            byte[] request = new byte[Modbus.Data.DataStore.LastRequest.Length - 4];
+
+            Array.Copy(Modbus.Data.DataStore.LastResponse, 6, response, 0, Modbus.Data.DataStore.LastResponse.Length - 6);
+            Array.Copy(Modbus.Data.DataStore.LastRequest, 6, request, 0, Modbus.Data.DataStore.LastRequest.Length - 6);
+
+            byte[] responseCrc = Modbus.Utility.ModbusUtility.CalculateCrc(response);
+            byte[] requestCrc = Modbus.Utility.ModbusUtility.CalculateCrc(request);
+
+            byte[] responseWithCrc = new byte[Modbus.Data.DataStore.LastResponse.Length - 4];
+            byte[] requestWithCrc = new byte[Modbus.Data.DataStore.LastRequest.Length - 4];
+
+            Array.Copy(Modbus.Data.DataStore.LastResponse, 6, responseWithCrc, 0, Modbus.Data.DataStore.LastResponse.Length - 6);
+            Array.Copy(Modbus.Data.DataStore.LastRequest, 6, requestWithCrc, 0, Modbus.Data.DataStore.LastRequest.Length - 6);
+
+            responseWithCrc[responseWithCrc.Length - 2] = responseCrc[0];
+            responseWithCrc[responseWithCrc.Length - 1] = responseCrc[1];
+            requestWithCrc[requestWithCrc.Length - 2] = requestCrc[0];
+            requestWithCrc[requestWithCrc.Length - 1] = requestCrc[1];
+
+            this.WriteOutput("[Network Mode]", responseWithCrc, requestWithCrc);
+        }
+
+        public static byte[] CalculateCrc(byte[] data) 
+        { 
+            if (data == null) 
+                throw new ArgumentNullException("data"); 
+
+            ushort crc = ushort.MaxValue; 
+
+            foreach (byte b in data) 
+            { 
+                byte tableIndex = (byte) (crc ^ b); 
+                crc >>= 8; 
+            //    crc ^= crcTable[tableIndex]; 
+            } 
+
+            return BitConverter.GetBytes(crc); 
         }
 
         #endregion
