@@ -562,6 +562,7 @@
             this.button9.TabIndex = 3;
             this.button9.Text = "Write";
             this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
             // 
             // button10
             // 
@@ -571,6 +572,7 @@
             this.button10.TabIndex = 2;
             this.button10.Text = "Read";
             this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.button10_Click);
             // 
             // groupBox5
             // 
@@ -624,6 +626,7 @@
             this.button6.TabIndex = 5;
             this.button6.Text = "Close";
             this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // button7
             // 
@@ -633,6 +636,7 @@
             this.button7.TabIndex = 4;
             this.button7.Text = "Open";
             this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
             // comboBox4
             // 

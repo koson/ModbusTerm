@@ -19,13 +19,16 @@ using Modbus.IO;
 using System.Net.Sockets;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Diagnostics;
 
 namespace ModbusTerm
 {
     public partial class GUI : Form
     {
         private SerialPort mport;
+        private SerialPort btSerialPort;
         private TcpClient tcp;
+        private Thread thr_update_dev;
 
         public GUI()
         {
@@ -38,6 +41,7 @@ namespace ModbusTerm
             log4net.Config.XmlConfigurator.Configure();
 
             // Подготовка элементов GUI
+            comboBox2.SelectedIndex = 5;
             serial_prepare();
         }
 
@@ -47,7 +51,14 @@ namespace ModbusTerm
 
             if (tabControl1.SelectedIndex == 0)
             {
+                comboBox2.SelectedIndex = 5;
                 serial_prepare();
+            }
+
+            if (tabControl1.SelectedIndex == 1)
+            {
+                comboBox4.SelectedIndex = 5;
+                bt_prepare();
             }
 
             if (tabControl1.SelectedIndex == 2)
@@ -63,6 +74,8 @@ namespace ModbusTerm
         private void serial_prepare()
         {
             string[] portnames = SerialPort.GetPortNames();
+            
+            comboBox1.Items.Clear();
 
             foreach (string portname in portnames)
             {
@@ -75,7 +88,6 @@ namespace ModbusTerm
 
             }
 
-            comboBox2.SelectedItem = "9600";
             comboBox1.SelectedItem = comboBox1.Items[0];
 
             groupBox3.Enabled = false;
@@ -263,10 +275,257 @@ namespace ModbusTerm
 
         #region Bluetooth Mode
 
+        private void bt_prepare()
+        {
+            groupBox6.Enabled = false;
+            comboBox6.Items.Clear();
+
+            thr_update_dev = new Thread(update_dev);
+            thr_update_dev.IsBackground = true;
+            thr_update_dev.Start();
+
+        }
+
         private void button8_Click(object sender, EventArgs e)
         {
+            // Update button
 
-           
+            thr_update_dev.Abort();
+            thr_update_dev = new Thread(update_dev);
+            thr_update_dev.IsBackground = true;
+            thr_update_dev.Start();
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            // Open button
+
+            Thread thr = new Thread(bt_pair);
+            thr.IsBackground = true;
+            thr.Start();
+
+        }
+
+        private void bt_pair()
+        {
+            BluetoothAddress BtAdress = null;
+            BluetoothClient _blueToothClient;
+            bool _beginConnect;
+            int c = 0;
+            string selDev = null;
+
+            try
+            {
+                _blueToothClient = new BluetoothClient();
+            }
+            catch { MessageBox.Show("Bluetooth модуль не подключен!"); return; }
+
+            button7.BeginInvoke((MethodInvoker)(() => { button7.Text = "Wait..."; button7.Enabled = false; }));
+            comboBox6.BeginInvoke((MethodInvoker)(() => selDev = comboBox6.SelectedItem.ToString()));
+
+            var devices = _blueToothClient.DiscoverDevices();
+
+            while (BtAdress == null)
+            {
+
+                foreach (var device in devices.Where(device => device.DeviceName == selDev))
+                {
+                    BtAdress = device.DeviceAddress;
+                    Console.WriteLine("Device found, Address:" + BtAdress.ToString());
+                }
+
+                if (BtAdress != null)
+                    break;
+
+                if (c > 2)
+                {
+                    MessageBox.Show("Невозможно подключиться к устройству!");
+                    button7.BeginInvoke((MethodInvoker)(() => { button7.Text = "Open"; button7.Enabled = true; }));
+                    return;
+                }
+
+                devices = _blueToothClient.DiscoverDevices();
+
+                c++;
+            }
+
+            BluetoothDeviceInfo _bluetoothDevice = null;
+            
+            try
+            {
+                 _bluetoothDevice = new BluetoothDeviceInfo(BtAdress);
+            }
+            catch (System.ArgumentNullException) { }
+
+            if (BluetoothSecurity.PairRequest(_bluetoothDevice.DeviceAddress, "1111"))
+            {
+                Console.WriteLine("Pair request result: :D");
+
+                if (_bluetoothDevice.Authenticated)
+                {
+                    Console.WriteLine("Authenticated result: Cool :D");
+
+                    _blueToothClient.SetPin("1111");
+
+                    _blueToothClient.BeginConnect(_bluetoothDevice.DeviceAddress, BluetoothService.SerialPort, null, _bluetoothDevice);
+                    _beginConnect = true;
+
+                    bt_serial(BtAdress.ToString()); // Open Serial port for Bluetooth
+
+                    if (btSerialPort != null)
+                    {
+                        button7.BeginInvoke((MethodInvoker)(() => button7.Text = "Open"));
+                        button6.BeginInvoke((MethodInvoker)(() => button6.Enabled = true));
+                        groupBox6.BeginInvoke((MethodInvoker)(() => groupBox6.Enabled = true));
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Authenticated: So sad :(");
+
+                    bt_pair();
+                }
+            }
+            else
+            {
+                Console.WriteLine("PairRequest: Sad :(");
+
+                MessageBox.Show("Невозможно подключиться к устройству!");
+                button7.BeginInvoke((MethodInvoker)(() => { button7.Text = "Open"; button7.Enabled = true; }));
+                return;
+            }
+            
+        }
+
+        private void bt_serial(string BtAdress)
+        {
+
+            // Создаем последовательный порт, используя стороннее приложение btcom.exe
+
+            Process a = Process.Start(Environment.CurrentDirectory + "\\btcom.exe", "-b\"" + BtAdress + "\" -c -s1101");
+            
+            a.WaitForExit();
+
+            // Поиск названия созданного порта
+
+            const string Win32_SerialPort = "Win32_SerialPort";
+            SelectQuery q = new SelectQuery(Win32_SerialPort);
+            ManagementObjectSearcher s = new ManagementObjectSearcher(q);
+            object id = null;
+
+            foreach (object cur in s.Get())
+            {
+                ManagementObject mo = (ManagementObject)cur;
+                id = mo.GetPropertyValue("DeviceID");
+                object pnpId = mo.GetPropertyValue("PNPDeviceID");
+                Console.WriteLine("DeviceID:    {0} ", id);
+                Console.WriteLine("PNPDeviceID: {0} ", pnpId);
+                Console.WriteLine("");
+            }
+
+            //id = "COM2";
+
+            if (id != null)
+            {
+                int bd = 9600;
+                comboBox4.BeginInvoke((MethodInvoker)(() => bd = int.Parse(comboBox4.SelectedItem.ToString())));
+
+                // Открываем последовательный порт
+                btSerialPort = new SerialPort(id.ToString(), bd);
+
+                try
+                {
+                    //ModbusRtuMaster.OpenPort(btSerialPort);
+                    btSerialPort.Open();
+                }
+                catch 
+                { 
+                    MessageBox.Show("Ошибка открытия порта!");
+                    button7.BeginInvoke((MethodInvoker)(() => { button7.Enabled = true; button7.Text = "Open"; }));
+                    button6.BeginInvoke((MethodInvoker)(() => button6.Enabled = false));
+                    groupBox6.BeginInvoke((MethodInvoker)(() => groupBox6.Enabled = false));
+                }
+
+                if (btSerialPort.IsOpen)
+                {
+                    logsBox.BeginInvoke((MethodInvoker)(() => logsBox.AppendText("[Bluetooth Mode] Port " + id.ToString() + " open (" + bd + " baud)\n")));
+                    Console.WriteLine("BT Serial Port is open!");
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("Ошибка создания COM порта!");
+                button7.BeginInvoke((MethodInvoker)(() => { button7.Enabled = true; button7.Text = "Open"; }));
+                button6.BeginInvoke((MethodInvoker)(() => button6.Enabled = false));
+                groupBox6.BeginInvoke((MethodInvoker)(() => groupBox6.Enabled = false));
+            }
+        }
+
+        private void update_dev()
+        {
+            BluetoothClient bt_client = null;
+
+            try
+            {
+                bt_client = new BluetoothClient();
+            }
+            catch { MessageBox.Show("Bluetooth модуль не подключен!"); return; }
+
+            button8.BeginInvoke((MethodInvoker)(() => { button8.Text = "Wait..."; button8.Enabled = false; }));
+            comboBox6.BeginInvoke((MethodInvoker)(() => comboBox6.Items.Clear()));
+
+            //ComboBox.ObjectCollection dev = new ComboBox.ObjectCollection(comboBox6);
+            List<string> dev = new List<string>();
+
+            foreach (BluetoothDeviceInfo device in bt_client.DiscoverDevices(100, true, true, true, true))
+            {
+                //comboBox6.BeginInvoke((MethodInvoker)(() => dev.Add(device.DeviceName)));
+                dev.Add(device.DeviceName);
+                
+            }
+
+            comboBox6.BeginInvoke((MethodInvoker)(() => comboBox6.Items.AddRange(dev.ToArray())));
+            //comboBox6.BeginInvoke((MethodInvoker)(() => comboBox6.SelectedIndex = 0));
+            button8.BeginInvoke((MethodInvoker)(() => { button8.Text = "Update"; button8.Enabled = true;}));
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            // Close button
+
+            button7.Enabled = true;
+            button6.Enabled = false;
+            groupBox6.Enabled = false;
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            // Write Button
+
+            string[] regs = textBox17.Text.Split(' ');
+
+            ushort[] uregs = new ushort[regs.Length];
+
+            for (int i = 0; i < regs.Length; i++)
+            {
+                if ((Convert.ToUInt32(regs[i]) <= 65535))
+                    uregs[i] = Convert.ToUInt16(regs[i]);
+            }
+
+            //master.WriteMultipleRegisters((byte)int.Parse(textBox3.Text), (ushort)int.Parse(textBox4.Text), uregs);
+            ModbusRtuMaster.WriteRegisters(btSerialPort, (byte)int.Parse(textBox19.Text), (ushort)int.Parse(textBox18.Text), uregs);
+
+            this.WriteOutput("[Bluetooth Mode]", Modbus.Data.DataStore.LastResponse, Modbus.Data.DataStore.LastRequest);
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            // Read Button
+            var registers = ModbusRtuMaster.ReadRegisters(btSerialPort, (byte)int.Parse(textBox16.Text), (ushort)int.Parse(textBox15.Text), (ushort)int.Parse(textBox14.Text));
+
+            this.ReadOutput("[Bluetooth Mode]", Modbus.Data.DataStore.LastResponse, Modbus.Data.DataStore.LastRequest, registers);
+
         }
 
         #endregion

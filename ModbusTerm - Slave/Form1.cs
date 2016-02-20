@@ -12,6 +12,9 @@ using Modbus.Data;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
+using InTheHand.Net.Sockets;
+using System.Diagnostics;
+using System.Management;
 
 namespace ModbusTerm___Slave
 {
@@ -22,6 +25,8 @@ namespace ModbusTerm___Slave
         TcpListener slaveTcpListener;
         Thread slaveTcp;
         ModbusSlave slaveTcpM;
+        Thread btSlaveThread;
+        SerialPort btSerialPort;
 
         public Form1()
         {
@@ -44,6 +49,7 @@ namespace ModbusTerm___Slave
             }
 
             comboBox2.SelectedItem = "9600";
+            comboBox5.SelectedItem = "9600";
             comboBox1.SelectedItem = comboBox1.Items[0];
 
             //Network Mode
@@ -136,6 +142,113 @@ namespace ModbusTerm___Slave
             slaveTcpListener.Stop();
             slaveTcpM.Dispose();
             slaveTcp.Abort();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            button6.Enabled = false;
+            button5.Enabled = true;
+
+            btSlaveThread = new Thread(bt_slave);
+            btSlaveThread.IsBackground = true;
+            btSlaveThread.Start();
+
+        }
+
+        private void bt_slave()
+        {
+            BluetoothClient bt_client = null;
+            string BtAdress = null;
+            string BtName = null;
+            try
+            {
+                bt_client = new BluetoothClient();
+            }
+            catch { MessageBox.Show("Bluetooth модуль не подключен!"); return; }
+
+            while (BtAdress == null)
+            {
+                foreach (BluetoothDeviceInfo device in bt_client.DiscoverDevices(10, true, false, false, false))
+                {
+                    Console.WriteLine(device.DeviceName);
+                    BtAdress = device.DeviceAddress.ToString();
+                    BtName = device.DeviceName;
+                }
+                
+                Thread.Sleep(1000);
+            }
+
+            label10.Text = BtName;
+
+            // Создаем последовательный порт, используя стороннее приложение btcom.exe
+
+            Process a = Process.Start(Environment.CurrentDirectory + "\\btcom.exe", "-b\"" + BtAdress + "\" -c -s1101");
+
+            a.WaitForExit();
+
+            // Поиск названия созданного порта
+
+            const string Win32_SerialPort = "Win32_SerialPort";
+            SelectQuery q = new SelectQuery(Win32_SerialPort);
+            ManagementObjectSearcher s = new ManagementObjectSearcher(q);
+            object id = null;
+
+            foreach (object cur in s.Get())
+            {
+                ManagementObject mo = (ManagementObject)cur;
+                id = mo.GetPropertyValue("DeviceID");
+                object pnpId = mo.GetPropertyValue("PNPDeviceID");
+                Console.WriteLine("DeviceID:    {0} ", id);
+                Console.WriteLine("PNPDeviceID: {0} ", pnpId);
+                Console.WriteLine("");
+            }
+
+            //id = "COM2";
+
+            if (id != null)
+            {
+                label11.BeginInvoke((MethodInvoker)(() => label11.Text = id.ToString()));
+                
+                int bd = 9600;
+                comboBox5.BeginInvoke((MethodInvoker)(() => bd = int.Parse(comboBox5.SelectedItem.ToString())));
+
+                // Открываем последовательный порт
+                btSerialPort = new SerialPort(id.ToString(), bd);
+
+                try
+                {
+                    //ModbusRtuMaster.OpenPort(btSerialPort);
+                    btSerialPort.Open();
+
+                    byte unitId = (byte)numericUpDown1.Value;
+
+                    // create modbus slave
+                    ModbusSlave slave = ModbusSerialSlave.CreateRtu(unitId, btSerialPort);
+                    slave.DataStore = DataStoreFactory.CreateDefaultDataStore();
+                    slave.ModbusSlaveRequestReceived += (obj, args) => { Console.WriteLine("[MODBUS SLAVE] I got it!!!"); };
+
+                    Console.WriteLine("BT PORT IS OPEN!");
+
+                    slave.Listen();
+                    
+                }
+                catch
+                {
+                    MessageBox.Show("Ошибка открытия порта!");
+                }
+
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            if(btSerialPort.IsOpen)
+                btSerialPort.Close();
+
+            btSlaveThread.Abort();
+
+            button5.Enabled = false;
+            button6.Enabled = true;
         }
 
     }
