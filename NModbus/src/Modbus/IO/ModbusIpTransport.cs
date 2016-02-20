@@ -108,6 +108,8 @@ namespace Modbus.IO
 			byte[] frame = BuildMessageFrame(message);
 			_logger.InfoFormat("TX: {0}", frame.Join(", "));
 			StreamResource.Write(frame, 0, frame.Length);
+
+            Data.DataStore.LastRequest = frame;
 		}
 
 		internal override byte[] ReadRequest()

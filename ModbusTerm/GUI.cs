@@ -577,18 +577,17 @@ namespace ModbusTerm
 
         private void button13_Click(object sender, EventArgs e)
         { // Открытие порта
-            button13.Enabled = false;
-            button12.Enabled = true;
-            groupBox8.Enabled = true;
-<<<<<<< HEAD
-            comboBox7.Enabled = false;
-            textBox21.Enabled = false;
-            tcp = new TcpClient(comboBox7.Text.ToString(), int.Parse(textBox21.Text));
-=======
-
+            //tcp = new TcpClient(comboBox7.Text.ToString(), int.Parse(textBox21.Text));
             tcp = new TcpClient(comboBox7.Text, int.Parse(textBox21.Text));
->>>>>>> origin/master
-            ModbusTcpMaster.connect(tcp);
+            if (tcp != null)
+            {
+                ModbusTcpMaster.connect(tcp);
+                button13.Enabled = false;
+                button12.Enabled = true;
+                groupBox8.Enabled = true;
+                comboBox7.Enabled = false;
+                textBox21.Enabled = false;
+            }
         }
 
         private void button12_Click(object sender, EventArgs e)
