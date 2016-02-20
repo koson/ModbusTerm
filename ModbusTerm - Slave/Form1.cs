@@ -139,9 +139,10 @@ namespace ModbusTerm___Slave
             button3.Enabled = false;
             button4.Enabled = true;
 
+            slaveTcp.Abort();
             slaveTcpListener.Stop();
             slaveTcpM.Dispose();
-            slaveTcp.Abort();
+            
         }
 
         private void button6_Click(object sender, EventArgs e)
