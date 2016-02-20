@@ -31,7 +31,7 @@ namespace ModbusTerm
         /// <summary>
         /// Delete TCP Client.
         /// </summary>
-        public static void Close()
+        public static void disconnect()
         {
             _client.Close();
         }

@@ -274,6 +274,7 @@ namespace ModbusTerm
         #region Network Code
         private void networkPrepare()
         {
+            comboBox7.Items.Clear();
             textBox21.Text = "502"; // Порт по умолчанию
             groupBox8.Enabled = false;
 
@@ -320,12 +321,10 @@ namespace ModbusTerm
             button13.Enabled = false;
             button12.Enabled = true;
             groupBox8.Enabled = true;
-
-            tcp = new TcpClient(comboBox7.SelectedItem.ToString(), int.Parse(textBox21.Text));
+            comboBox7.Enabled = false;
+            textBox21.Enabled = false;
+            tcp = new TcpClient(comboBox7.Text.ToString(), int.Parse(textBox21.Text));
             ModbusTcpMaster.connect(tcp);
-            //tcp = new ModbusTCP.Master(comboBox7.SelectedItem.ToString(), ushort.Parse(textBox21.Text));
-            if (tcp.Connected)
-                MessageBox.Show("Connected");
         }
 
         private void button12_Click(object sender, EventArgs e)
@@ -333,19 +332,20 @@ namespace ModbusTerm
             button13.Enabled = true;
             button12.Enabled = false;
             groupBox8.Enabled = false;
-            /*
+            comboBox7.Enabled = true;
+            textBox21.Enabled = true;
             if (tcp != null)
             {
-                tcp.disconnect();
-            }*/
+                ModbusTcpMaster.disconnect();
+            }
         }
 
         private void button14_Click(object sender, EventArgs e)
         { // Read button
             // 24 23 22
-            ushort[] values = ModbusTcpMaster.ReadRegisters(byte.Parse(textBox24.Text), ushort.Parse(textBox23.Text), ushort.Parse(textBox22.Text));
-            Console.WriteLine("Length " + values.Length.ToString());
-            Console.WriteLine(values[0]);
+            ushort[] registers = ModbusTcpMaster.ReadRegisters(byte.Parse(textBox24.Text), ushort.Parse(textBox23.Text), ushort.Parse(textBox22.Text));
+            
+            this.ReadOutput("[Network Mode]", Modbus.Data.DataStore.LastResponse, Modbus.Data.DataStore.LastRequest, registers);
         }
 
         private void button11_Click(object sender, EventArgs e)
@@ -361,6 +361,8 @@ namespace ModbusTerm
                 uregs[i] = Convert.ToUInt16(regs[i]);
             }
             ModbusTcpMaster.WriteRegisters(byte.Parse(textBox27.Text), ushort.Parse(textBox26.Text), uregs);
+
+            this.WriteOutput("[Network Mode]", Modbus.Data.DataStore.LastResponse, Modbus.Data.DataStore.LastRequest);
         }
 
         #endregion
