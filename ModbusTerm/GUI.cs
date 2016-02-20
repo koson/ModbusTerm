@@ -321,9 +321,14 @@ namespace ModbusTerm
             button13.Enabled = false;
             button12.Enabled = true;
             groupBox8.Enabled = true;
+<<<<<<< HEAD
             comboBox7.Enabled = false;
             textBox21.Enabled = false;
             tcp = new TcpClient(comboBox7.Text.ToString(), int.Parse(textBox21.Text));
+=======
+
+            tcp = new TcpClient(comboBox7.Text, int.Parse(textBox21.Text));
+>>>>>>> origin/master
             ModbusTcpMaster.connect(tcp);
         }
 
@@ -411,7 +416,13 @@ namespace ModbusTerm
 
         private void onlyNum(object sender, KeyPressEventArgs e)
         {
-            if ((e.KeyChar <= 48 || e.KeyChar >= 59) && e.KeyChar != 8)
+            if ((e.KeyChar < 48 || e.KeyChar > 58) && e.KeyChar != 8)
+                e.Handled = true;
+        }
+
+        private void onlyNumWithSpace(object sender, KeyPressEventArgs e)
+        {
+            if ((e.KeyChar < 48 || e.KeyChar > 58) && (e.KeyChar != 8) && (e.KeyChar != 32))
                 e.Handled = true;
         }
     }
