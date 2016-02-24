@@ -587,7 +587,15 @@ namespace ModbusTerm
 
         private void button13_Click(object sender, EventArgs e)
         { // Открытие порта
-            tcp = new TcpClient(comboBox7.Text, int.Parse(textBox21.Text));
+            try
+            {
+                tcp = new TcpClient(comboBox7.Text, int.Parse(textBox21.Text));
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                MessageBox.Show(this, "Не удалось подключиться", "ModbusTerm error");
+                return;
+            }
             if (tcp != null)
             {
                 ModbusTcpMaster.connect(tcp);
@@ -697,16 +705,24 @@ namespace ModbusTerm
             //String password = textBox28.Text;
             if (!textBox20.Text.Equals("") && !textBox28.Text.Equals(""))
             {
-                Console.WriteLine(textBox20.Text + " " + textBox28.Text);
-                string command1 = "netsh wlan set hosted mode=allow ssid=\"" + textBox20.Text + "\" key=\"" + textBox28.Text + "\"";
-                string command2 = "netsh wlan start hosted";
-                System.Diagnostics.Process.Start("cmd.exe", "/C " + command1);
-                System.Diagnostics.Process.Start("cmd.exe", "/C " + command2);
-                textBox20.Enabled = false;
-                textBox28.Enabled = false;
-                button15.Enabled = false;
-                button16.Enabled = true;
+                MessageBox.Show(this, "Название и пароль не указаны", "ModbusTerm error");
+                return;
             }
+            if (textBox28.Text.Length < 8)
+            {
+                MessageBox.Show(this, "Пароль слишком короткий.\nВведите минимум 8 символов.", "ModbusTerm error");
+                return;
+            }
+            
+            Console.WriteLine(textBox20.Text + " " + textBox28.Text);
+            string command1 = "netsh wlan set hosted mode=allow ssid=\"" + textBox20.Text + "\" key=\"" + textBox28.Text + "\"";
+            string command2 = "netsh wlan start hosted";
+            System.Diagnostics.Process.Start("cmd.exe", "/C " + command1);
+            System.Diagnostics.Process.Start("cmd.exe", "/C " + command2);
+            textBox20.Enabled = false;
+            textBox28.Enabled = false;
+            button15.Enabled = false;
+            button16.Enabled = true;
         }
 
         private void button16_Click(object sender, EventArgs e)
@@ -717,6 +733,34 @@ namespace ModbusTerm
             textBox28.Enabled = true;
             button15.Enabled = true;
             button16.Enabled = false;
+        }
+
+        private void button17_Click(object sender, EventArgs e)
+        { // Кнопка обновить
+            comboBox7.Items.Clear();
+            IPHostEntry ipEntry = Dns.GetHostEntry(Dns.GetHostName()); // Получение ip-адресов
+            IPAddress[] addr = ipEntry.AddressList; // Список адресов
+            IPAddress localIp = null; // Собственный адрес
+            foreach (IPAddress a in addr)
+            { // Получение собственного ip
+                if (a.ToString().Length <= 15)
+                    localIp = a;
+            }
+            // Разделяем строку адреса на части
+            string[] ipParts = localIp.ToString().Split('.');
+            // Берем все части, кроме последней
+            string ipPattern = ipParts[0] + "." + ipParts[1] + "." + ipParts[2] + ".";
+            AutoResetEvent waiter = new AutoResetEvent(false); //создаем класс управления событиями в потоке
+            byte[] buffer = Encoding.ASCII.GetBytes("test ping"); //записываем в массив байт сконвертированную в байтовый массив строку для отправки в пинг запросе
+            for (int i = 1; i < 255; i++)
+            {
+                Ping p = new Ping();
+                p.PingCompleted += new PingCompletedEventHandler(p_PingCompleted); //указываем на метод, который будет выполняться в результате получения ответа на асинхронный запрос пинга
+                PingOptions options = new PingOptions(64, true); //выставляем опции для пинга (непринципиально)
+                IPAddress ip = IPAddress.Parse(ipPattern + i); // формируем ip-адрес
+                p.SendAsync(ip, 500, buffer, options, waiter); //посылаем асинхронный пинг на адрес с таймаутом 500мс, в нем передаем массив байт сконвертированных их строки в начале кода, используем при передаче указанные опции, после обращаемся к классу управления событиями
+            }
+            comboBox7.Sorted = true; // Сортировка по возрастанию
         }
 
         #endregion
@@ -779,6 +823,8 @@ namespace ModbusTerm
         {
 
         }
+
+
 
 
 

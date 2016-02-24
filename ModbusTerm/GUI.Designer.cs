@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GUI));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.logsBox = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -82,6 +83,7 @@
             this.label16 = new System.Windows.Forms.Label();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.button16 = new System.Windows.Forms.Button();
             this.textBox28 = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.textBox20 = new System.Windows.Forms.TextBox();
@@ -102,6 +104,7 @@
             this.button11 = new System.Windows.Forms.Button();
             this.button14 = new System.Windows.Forms.Button();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.button17 = new System.Windows.Forms.Button();
             this.comboBox7 = new System.Windows.Forms.ComboBox();
             this.textBox21 = new System.Windows.Forms.TextBox();
             this.label26 = new System.Windows.Forms.Label();
@@ -121,7 +124,6 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.button16 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -710,6 +712,16 @@
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Operations:";
             // 
+            // button16
+            // 
+            this.button16.Location = new System.Drawing.Point(240, 124);
+            this.button16.Name = "button16";
+            this.button16.Size = new System.Drawing.Size(98, 20);
+            this.button16.TabIndex = 21;
+            this.button16.Text = "Stop ad-hoc";
+            this.button16.UseVisualStyleBackColor = true;
+            this.button16.Click += new System.EventHandler(this.button16_Click);
+            // 
             // textBox28
             // 
             this.textBox28.Location = new System.Drawing.Point(123, 124);
@@ -876,6 +888,7 @@
             // 
             // groupBox7
             // 
+            this.groupBox7.Controls.Add(this.button17);
             this.groupBox7.Controls.Add(this.comboBox7);
             this.groupBox7.Controls.Add(this.textBox21);
             this.groupBox7.Controls.Add(this.label26);
@@ -889,17 +902,28 @@
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Settings:";
             // 
+            // button17
+            // 
+            this.button17.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("button17.BackgroundImage")));
+            this.button17.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.button17.Location = new System.Drawing.Point(150, 27);
+            this.button17.Name = "button17";
+            this.button17.Size = new System.Drawing.Size(22, 22);
+            this.button17.TabIndex = 10;
+            this.button17.UseVisualStyleBackColor = true;
+            this.button17.Click += new System.EventHandler(this.button17_Click);
+            // 
             // comboBox7
             // 
             this.comboBox7.FormattingEnabled = true;
-            this.comboBox7.Location = new System.Drawing.Point(51, 28);
+            this.comboBox7.Location = new System.Drawing.Point(43, 28);
             this.comboBox7.Name = "comboBox7";
             this.comboBox7.Size = new System.Drawing.Size(100, 21);
             this.comboBox7.TabIndex = 9;
             // 
             // textBox21
             // 
-            this.textBox21.Location = new System.Drawing.Point(51, 55);
+            this.textBox21.Location = new System.Drawing.Point(43, 55);
             this.textBox21.Name = "textBox21";
             this.textBox21.Size = new System.Drawing.Size(100, 20);
             this.textBox21.TabIndex = 8;
@@ -1072,16 +1096,6 @@
             this.label1.TabIndex = 24;
             this.label1.Text = "SlaveID:";
             // 
-            // button16
-            // 
-            this.button16.Location = new System.Drawing.Point(240, 124);
-            this.button16.Name = "button16";
-            this.button16.Size = new System.Drawing.Size(98, 20);
-            this.button16.TabIndex = 21;
-            this.button16.Text = "Stop ad-hoc";
-            this.button16.UseVisualStyleBackColor = true;
-            this.button16.Click += new System.EventHandler(this.button16_Click);
-            // 
             // GUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1216,5 +1230,6 @@
         private System.Windows.Forms.TextBox textBox20;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Button button16;
+        private System.Windows.Forms.Button button17;
     }
 }
