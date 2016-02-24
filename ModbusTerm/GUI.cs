@@ -703,7 +703,7 @@ namespace ModbusTerm
         {// Создание ad-hoc-сети
             //String name = textBox20.Text;
             //String password = textBox28.Text;
-            if (!textBox20.Text.Equals("") && !textBox28.Text.Equals(""))
+            if (textBox20.Text.Equals("") && textBox28.Text.Equals(""))
             {
                 MessageBox.Show(this, "Название и пароль не указаны", "ModbusTerm error");
                 return;
