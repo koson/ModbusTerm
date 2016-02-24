@@ -535,17 +535,28 @@ namespace ModbusTerm
         {
             comboBox7.Items.Clear();
             textBox21.Text = "502"; // Порт по умолчанию
-            groupBox8.Enabled = false;
+            //groupBox8.Enabled = false;
+            textBox22.Enabled = false;
+            textBox23.Enabled = false;
+            textBox24.Enabled = false;
+            textBox25.Enabled = false;
+            textBox26.Enabled = false;
+            textBox27.Enabled = false;
+            button11.Enabled = false;
+            button14.Enabled = false;
+            button16.Enabled = false;
 
             IPHostEntry ipEntry = Dns.GetHostEntry(Dns.GetHostName()); // Получение ip-адресов
-            IPAddress[] addr = ipEntry.AddressList;
-            IPAddress localIp = null;
+            IPAddress[] addr = ipEntry.AddressList; // Список адресов
+            IPAddress localIp = null; // Собственный адрес
             foreach (IPAddress a in addr)
             { // Получение собственного ip
                 if (a.ToString().Length <= 15)
                     localIp = a;
             }
+            // Разделяем строку адреса на части
             string[] ipParts = localIp.ToString().Split('.');
+            // Берем все части, кроме последней
             string ipPattern = ipParts[0] + "." + ipParts[1] + "." + ipParts[2] + ".";
 
             AutoResetEvent waiter = new AutoResetEvent(false); //создаем класс управления событиями в потоке
@@ -569,7 +580,6 @@ namespace ModbusTerm
                 //Добавляем адрес, с которого пришел ответ в comboBox
                 comboBox7.Items.Add(e.Reply.Address.ToString());
                 comboBox7.SelectedIndex = 0;
-                //Console.WriteLine(e.Reply.Address.ToString());
             }
             // Let the main thread resume.
             ((AutoResetEvent)e.UserState).Set();
@@ -577,14 +587,21 @@ namespace ModbusTerm
 
         private void button13_Click(object sender, EventArgs e)
         { // Открытие порта
-            //tcp = new TcpClient(comboBox7.Text.ToString(), int.Parse(textBox21.Text));
             tcp = new TcpClient(comboBox7.Text, int.Parse(textBox21.Text));
             if (tcp != null)
             {
                 ModbusTcpMaster.connect(tcp);
                 button13.Enabled = false;
                 button12.Enabled = true;
-                groupBox8.Enabled = true;
+                //groupBox8.Enabled = true;
+                textBox22.Enabled = true;
+                textBox23.Enabled = true;
+                textBox24.Enabled = true;
+                textBox25.Enabled = true;
+                textBox26.Enabled = true;
+                textBox27.Enabled = true;
+                button11.Enabled = true;
+                button14.Enabled = true;
                 comboBox7.Enabled = false;
                 textBox21.Enabled = false;
             }
@@ -594,7 +611,16 @@ namespace ModbusTerm
         { // Закрытие порта
             button13.Enabled = true;
             button12.Enabled = false;
-            groupBox8.Enabled = false;
+            //groupBox8.Enabled = false;
+            textBox22.Enabled = false;
+            textBox23.Enabled = false;
+            textBox24.Enabled = false;
+            textBox25.Enabled = false;
+            textBox26.Enabled = false;
+            textBox27.Enabled = false;
+            button11.Enabled = false;
+            button14.Enabled = false;
+
             comboBox7.Enabled = true;
             textBox21.Enabled = true;
             if (tcp != null)
@@ -605,84 +631,90 @@ namespace ModbusTerm
 
         private void button14_Click(object sender, EventArgs e)
         { // Read button
-            // 24 23 22
+            // Значение указанных регистров
             ushort[] registers = ModbusTcpMaster.ReadRegisters(byte.Parse(textBox24.Text), ushort.Parse(textBox23.Text), ushort.Parse(textBox22.Text));
-            
+            // Запрос и ответ
             byte[] response = new byte[Modbus.Data.DataStore.LastResponse.Length - 6];
             byte[] request = new byte[Modbus.Data.DataStore.LastRequest.Length - 6];
-            
+            // Копирование тела запроса и ответа
             Array.Copy(Modbus.Data.DataStore.LastResponse, 6, response, 0, Modbus.Data.DataStore.LastResponse.Length - 6);
             Array.Copy(Modbus.Data.DataStore.LastRequest, 6, request, 0, Modbus.Data.DataStore.LastRequest.Length - 6);
-            
+            // Подсчет crc для запроса и ответа
             byte[] responseCrc = Modbus.Utility.ModbusUtility.CalculateCrc(response);
             byte[] requestCrc = Modbus.Utility.ModbusUtility.CalculateCrc(request);
-
+            // Запрос с crc
             byte[] responseWithCrc = new byte[Modbus.Data.DataStore.LastResponse.Length - 4];
             byte[] requestWithCrc = new byte[Modbus.Data.DataStore.LastRequest.Length - 4];
-
+            // Копирование запроса без crc
             Array.Copy(Modbus.Data.DataStore.LastResponse, 6, responseWithCrc, 0, Modbus.Data.DataStore.LastResponse.Length - 6);
             Array.Copy(Modbus.Data.DataStore.LastRequest, 6, requestWithCrc, 0, Modbus.Data.DataStore.LastRequest.Length - 6);
-
+            // Добавление crc в строки запроса и ответа
             responseWithCrc[responseWithCrc.Length - 2] = responseCrc[0];
             responseWithCrc[responseWithCrc.Length - 1] = responseCrc[1];
             requestWithCrc[requestWithCrc.Length - 2] = requestCrc[0];
             requestWithCrc[requestWithCrc.Length - 1] = requestCrc[1];
-
+            // Вывод в лог-бокс
             this.ReadOutput("[Network Mode]", responseWithCrc, requestWithCrc, registers);
         }
 
         private void button11_Click(object sender, EventArgs e)
-        {
-            // Write button
-            // 27 26 25
+        { // Write button
             string[] regs = textBox25.Text.Split(' ');
-
             ushort[] uregs = new ushort[regs.Length];
-
             for (int i = 0; i < regs.Length; i++)
-            {
+            { // Парсинг значений регистров из строки
                 uregs[i] = Convert.ToUInt16(regs[i]);
             }
+            // Отправка запроса
             ModbusTcpMaster.WriteRegisters(byte.Parse(textBox27.Text), ushort.Parse(textBox26.Text), uregs);
-
+            // Запрос и ответ
             byte[] response = new byte[Modbus.Data.DataStore.LastResponse.Length - 4];
             byte[] request = new byte[Modbus.Data.DataStore.LastRequest.Length - 4];
-
+            // Копирование тела запроса и ответа
             Array.Copy(Modbus.Data.DataStore.LastResponse, 6, response, 0, Modbus.Data.DataStore.LastResponse.Length - 6);
             Array.Copy(Modbus.Data.DataStore.LastRequest, 6, request, 0, Modbus.Data.DataStore.LastRequest.Length - 6);
-
+            // Подсчет crc для запроса и ответа
             byte[] responseCrc = Modbus.Utility.ModbusUtility.CalculateCrc(response);
             byte[] requestCrc = Modbus.Utility.ModbusUtility.CalculateCrc(request);
-
+            // Запрос с crc
             byte[] responseWithCrc = new byte[Modbus.Data.DataStore.LastResponse.Length - 4];
             byte[] requestWithCrc = new byte[Modbus.Data.DataStore.LastRequest.Length - 4];
-
+            // Копирование запроса без crc
             Array.Copy(Modbus.Data.DataStore.LastResponse, 6, responseWithCrc, 0, Modbus.Data.DataStore.LastResponse.Length - 6);
             Array.Copy(Modbus.Data.DataStore.LastRequest, 6, requestWithCrc, 0, Modbus.Data.DataStore.LastRequest.Length - 6);
-
+            // Добавление crc в строки запроса и ответа
             responseWithCrc[responseWithCrc.Length - 2] = responseCrc[0];
             responseWithCrc[responseWithCrc.Length - 1] = responseCrc[1];
             requestWithCrc[requestWithCrc.Length - 2] = requestCrc[0];
             requestWithCrc[requestWithCrc.Length - 1] = requestCrc[1];
-
+            // Вывод в лог-бокс
             this.WriteOutput("[Network Mode]", responseWithCrc, requestWithCrc);
         }
 
-        public static byte[] CalculateCrc(byte[] data) 
-        { 
-            if (data == null) 
-                throw new ArgumentNullException("data"); 
+        private void button15_Click(object sender, EventArgs e)
+        {// Создание ad-hoc-сети
+            String name = textBox20.Text;
+            String password = textBox28.Text;
+            if (!password.Equals("") && !name.Equals("")){
+                string command1 = "netsh wlan set hosted mode=allow ssid=\"" + name + "\" key=\"" + password + "\"";
+                string command2 = "netsh wlan start hosted";
+                System.Diagnostics.Process.Start("cmd.exe", "/C " + command1);
+                System.Diagnostics.Process.Start("cmd.exe", "/C " + command2);
+                textBox20.Enabled = false;
+                textBox28.Enabled = false;
+                button15.Enabled = false;
+                button16.Enabled = true;
+            }
+        }
 
-            ushort crc = ushort.MaxValue; 
-
-            foreach (byte b in data) 
-            { 
-                byte tableIndex = (byte) (crc ^ b); 
-                crc >>= 8; 
-            //    crc ^= crcTable[tableIndex]; 
-            } 
-
-            return BitConverter.GetBytes(crc); 
+        private void button16_Click(object sender, EventArgs e)
+        { // Удаление ad-hoc-сети
+            string command = "netsh wlan stop hosted";
+            System.Diagnostics.Process.Start("cmd.exe", "/C " + command);
+            textBox20.Enabled = true;
+            textBox28.Enabled = true;
+            button15.Enabled = true;
+            button16.Enabled = false;
         }
 
         #endregion
@@ -740,5 +772,14 @@ namespace ModbusTerm
             if ((e.KeyChar < 48 || e.KeyChar > 58) && (e.KeyChar != 8) && (e.KeyChar != 32))
                 e.Handled = true;
         }
+
+        private void label17_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
+
+
     }
 }

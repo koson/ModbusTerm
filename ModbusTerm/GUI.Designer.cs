@@ -82,6 +82,11 @@
             this.label16 = new System.Windows.Forms.Label();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.textBox28 = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.textBox20 = new System.Windows.Forms.TextBox();
+            this.label15 = new System.Windows.Forms.Label();
+            this.button15 = new System.Windows.Forms.Button();
             this.label25 = new System.Windows.Forms.Label();
             this.textBox22 = new System.Windows.Forms.TextBox();
             this.label28 = new System.Windows.Forms.Label();
@@ -116,6 +121,7 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.button16 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -677,6 +683,12 @@
             // 
             // groupBox8
             // 
+            this.groupBox8.Controls.Add(this.button16);
+            this.groupBox8.Controls.Add(this.textBox28);
+            this.groupBox8.Controls.Add(this.label17);
+            this.groupBox8.Controls.Add(this.textBox20);
+            this.groupBox8.Controls.Add(this.label15);
+            this.groupBox8.Controls.Add(this.button15);
             this.groupBox8.Controls.Add(this.label25);
             this.groupBox8.Controls.Add(this.textBox22);
             this.groupBox8.Controls.Add(this.label28);
@@ -697,6 +709,48 @@
             this.groupBox8.TabIndex = 8;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Operations:";
+            // 
+            // textBox28
+            // 
+            this.textBox28.Location = new System.Drawing.Point(123, 124);
+            this.textBox28.Name = "textBox28";
+            this.textBox28.Size = new System.Drawing.Size(100, 20);
+            this.textBox28.TabIndex = 20;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(12, 128);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(98, 13);
+            this.label17.TabIndex = 19;
+            this.label17.Text = "Network password:";
+            // 
+            // textBox20
+            // 
+            this.textBox20.Location = new System.Drawing.Point(123, 99);
+            this.textBox20.Name = "textBox20";
+            this.textBox20.Size = new System.Drawing.Size(100, 20);
+            this.textBox20.TabIndex = 18;
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(11, 102);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(79, 13);
+            this.label15.TabIndex = 17;
+            this.label15.Text = "Network name:";
+            // 
+            // button15
+            // 
+            this.button15.Location = new System.Drawing.Point(240, 99);
+            this.button15.Name = "button15";
+            this.button15.Size = new System.Drawing.Size(98, 20);
+            this.button15.TabIndex = 16;
+            this.button15.Text = "Start ad-hoc";
+            this.button15.UseVisualStyleBackColor = true;
+            this.button15.Click += new System.EventHandler(this.button15_Click);
             // 
             // label25
             // 
@@ -1018,6 +1072,16 @@
             this.label1.TabIndex = 24;
             this.label1.Text = "SlaveID:";
             // 
+            // button16
+            // 
+            this.button16.Location = new System.Drawing.Point(240, 124);
+            this.button16.Name = "button16";
+            this.button16.Size = new System.Drawing.Size(98, 20);
+            this.button16.TabIndex = 21;
+            this.button16.Text = "Stop ad-hoc";
+            this.button16.UseVisualStyleBackColor = true;
+            this.button16.Click += new System.EventHandler(this.button16_Click);
+            // 
             // GUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1146,5 +1210,11 @@
         private System.Windows.Forms.Label label27;
         private System.Windows.Forms.Button button13;
         private System.Windows.Forms.ComboBox comboBox7;
+        private System.Windows.Forms.Button button15;
+        private System.Windows.Forms.TextBox textBox28;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.TextBox textBox20;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Button button16;
     }
 }
