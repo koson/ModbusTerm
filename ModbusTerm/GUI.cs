@@ -693,10 +693,12 @@ namespace ModbusTerm
 
         private void button15_Click(object sender, EventArgs e)
         {// Создание ad-hoc-сети
-            String name = textBox20.Text;
-            String password = textBox28.Text;
-            if (!password.Equals("") && !name.Equals("")){
-                string command1 = "netsh wlan set hosted mode=allow ssid=\"" + name + "\" key=\"" + password + "\"";
+            //String name = textBox20.Text;
+            //String password = textBox28.Text;
+            if (!textBox20.Text.Equals("") && !textBox28.Text.Equals(""))
+            {
+                Console.WriteLine(textBox20.Text + " " + textBox28.Text);
+                string command1 = "netsh wlan set hosted mode=allow ssid=\"" + textBox20.Text + "\" key=\"" + textBox28.Text + "\"";
                 string command2 = "netsh wlan start hosted";
                 System.Diagnostics.Process.Start("cmd.exe", "/C " + command1);
                 System.Diagnostics.Process.Start("cmd.exe", "/C " + command2);
