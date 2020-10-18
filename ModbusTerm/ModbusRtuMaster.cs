@@ -53,7 +53,8 @@ namespace ModbusTerm
                     var master = ModbusSerialMaster.CreateRtu(port);
                     master.Transport.ReadTimeout = ReadTimeout;
                     master.Transport.Retries = AttemptsModbus;
-                    registers = master.ReadHoldingRegisters(slaveAddress, startAddress, numRegisters);
+                    //registers = master.ReadHoldingRegisters(slaveAddress, startAddress, numRegisters);
+                    registers = master.ReadInputRegisters(slaveAddress, startAddress, numRegisters);
                 }
                 catch
                 {
